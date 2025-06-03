@@ -6,34 +6,44 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct NewItemView: View {
     //State handling for model data
-    @StateObject var viewModel = NewItemViewViewModel(_toDoTitle: "", _dueDate: Date.now)
+    
+    @State private var item = ToDoListItem()
+    @Environment(\.modelContext) var context
     
     // Dismiss
     @Environment(\.dismiss) var dismiss
+    
     
     // UI Body
     var body: some View {
         VStack {
             // Add navigation Title
-//            Text("Add your To-Do here!")
-//                .font(.system(size: 25))
-//                .bold()
+            //            Text("Add your To-Do here!")
+            //                .font(.system(size: 25))
+            //                .bold()
             Form {
                 // Title
-               TextField("Title", text: $viewModel.toDoTitle)
+                TextField("Title", text: $item.title)
                     .textFieldStyle(DefaultTextFieldStyle())
                 // Due Date
-                DatePicker("Due Date", selection: $viewModel.dueDate)
-                    .datePickerStyle(.graphical)
+                DatePicker("Due Date", selection: $item.timestamp,
+                           in: Date()...,
+                           displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                
                 // Toggle
-                Toggle("Important", isOn: .constant(false))
+                Toggle("Important", isOn: $item.isCritical)
                 // Button
                 Button("Save") {
+                    withAnimation {
+                        context.insert(item)
+                    }
                     dismiss()
-                }
+                }.disabled(item.title == "")
             }
         }
     }
@@ -41,4 +51,5 @@ struct NewItemView: View {
 
 #Preview {
     NewItemView()
+        .modelContainer(for: ToDoListItem.self)
 }
